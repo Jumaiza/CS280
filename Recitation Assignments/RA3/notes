@@ -1,0 +1,15 @@
+int *x = new int[n]; // dynamically allocated variable
+
+int x=5;
+
+int *y = &x;
+
+*y = 10;
+
+cout << y;
+
+y means memory location, u can use it to change value or initialize
+*y is the value at memory location x
+
+Actually, x[i] is a shorthand for *(x+i) in C/C++.
+    The language defines “pointer arithmetic”.
