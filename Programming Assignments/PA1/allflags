@@ -1,0 +1,12 @@
+PROGRAM prog1;
+	(* Testing all flags *) 
+	VAR
+	integer _x1, y_1, z-, w234;	
+	string str := 'Welcome';
+	real z = 0.0
+	
+begin
+	r = 50;
+	for x =1 to 10 do
+	for y = 10 down to 0 do
+END

@@ -1,0 +1,9 @@
+PROGRAM
+IDENT(PROG1)
+SEMICOL
+
+Missing a comment end delimiters '*)' at line 10
+Lines: 10
+Tokens: 3
+IDENTIFIERS:
+PROG1
