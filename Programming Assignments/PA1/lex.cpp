@@ -65,6 +65,12 @@ LexItem getNextToken(istream &in, int &linenumber)
                 lexState = INCOMMENT;
                 continue;
             }
+            if (character == '(')
+            {
+                lexeme += character;
+                return LexItem(LPAREN, lexeme, linenumber);
+            }
+
             if (character == '+')
             {
                 lexeme += character;
@@ -139,14 +145,12 @@ LexItem getNextToken(istream &in, int &linenumber)
                 lexeme += character;
                 return LexItem(SEMICOL, lexeme, linenumber);
             }
-
+            cout << "Error in line " << linenumber + 1 << " (" << lexeme << ")" << endl;
+            return LexItem(ERR, lexeme, linenumber);
+            break;
         case INIDENT:
 
-            if (in.peek() == -1)
-            {
-                return LexItem(ERR, lexeme, linenumber);
-            }
-            else if (!(isalpha(character)) && !(character == '_') && !(isdigit(character)))
+            if (!(isalpha(character)) && !(character == '_') && !(isdigit(character)))
             {
                 in.putback(character);
                 lexState = START;
@@ -160,17 +164,19 @@ LexItem getNextToken(istream &in, int &linenumber)
                 // lexeme += char(in.peek());
                 break;
             }
+            break;
         case INSTRING:
 
             if (in.peek() == -1)
             {
                 return LexItem(ERR, lexeme, linenumber);
             }
-            else if (character == '\n')
+            else if (character == '\"' || ((isspace(character) && isspace(in.peek()))))
             {
                 lexeme += character;
-                cout << "Error in line " << linenumber << " (" << lexeme << endl;
-                return LexItem(ERR, lexeme, linenumber);
+                cout << "Error in line " << linenumber + 1 << " (" << lexeme << ")" << endl;
+                // return LexItem(ERR, lexeme, linenumber);
+                exit(0);
             }
             else if (character != '\'')
             {
@@ -211,11 +217,21 @@ LexItem getNextToken(istream &in, int &linenumber)
 
         case INREAL:
 
-            if (in.peek() == -1)
+            if (character == '.')
             {
-                return LexItem(ERR, lexeme, linenumber);
+                lexeme += character;
+                cout << "Error in line " << linenumber + 1 << " (" << lexeme << ")" << endl;
+                // return LexItem(ERR, lexeme, linenumber);
+                exit(0);
             }
-            else if (!isdigit(character))
+            if (lexeme.at(lexeme.length() - 1) == '.' && !(isdigit(character)))
+            {
+                lexeme += character;
+                cout << "Error in line " << linenumber << " (" << lexeme << ")" << endl;
+                // return LexItem(ERR, lexeme, linenumber);
+                exit(0);
+            }
+            else if (!(isdigit(character)))
             {
                 in.putback(character);
                 lexState = START;
@@ -248,6 +264,9 @@ LexItem getNextToken(istream &in, int &linenumber)
         }
     }
 
+    if (lexState == INCOMMENT)
+        cout << endl
+             << "Missing a comment end delimiters '*)' at line " << linenumber << endl;
     return LexItem(DONE, lexeme, linenumber);
 }
 
@@ -292,15 +311,19 @@ ostream &operator<<(ostream &out, const LexItem &tok)
 
     // get string from token
     string GetTokenInString = TokenToString.find(currentToken)->second;
+
     out << GetTokenInString;
-    if (currentToken == IDENT || currentToken == ICONST || currentToken == SCONST || currentToken == RCONST)
+
+    if (GetTokenInString == "IDENT" || GetTokenInString == "ICONST" || GetTokenInString == "RCONST")
     {
-        out << " (" << tok.GetLexeme() << ")";
-
-        return out;
+        out << "(" << tok.GetLexeme() << ")";
     }
-
-    out << GetTokenInString;
+    else if (GetTokenInString == "SCONST")
+    {
+        string lexeme = tok.GetLexeme();
+        string withoutQuotes = lexeme.substr(1, lexeme.size() - 2);
+        out << "(" << withoutQuotes << ")";
+    }
 
     return out;
 }

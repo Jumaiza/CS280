@@ -1,10 +1,3 @@
-/*
- * lex.h
- *
- * CS280
- * Fall 2021
- */
-
 #ifndef LEX_H_
 #define LEX_H_
 
@@ -55,6 +48,7 @@ enum Token
 	LTHAN,
 	SEMICOL,
 	COLON,
+	DOT,
 	// any error returns this token
 	ERR,
 

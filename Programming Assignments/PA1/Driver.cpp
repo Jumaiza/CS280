@@ -1,187 +1,177 @@
+//
+//  main.cpp
+//  lexdriver.cpp
+//
+//  Created by Sandeep Singh on 3/5/22.
+//
 #include <iostream>
-#include <map>
-#include <fstream>
-#include <vector>
 #include "lex.h"
-#include <algorithm>
-
-#include <cctype>
 #include <map>
-using std::map;
+#include <string>
+#include <fstream>
+#include <cctype>
+#include <sstream>
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
-
-	bool vFlag = false;
-	bool iconstFlag = false;
-	bool rconstFlag = false;
-	bool sconstFlag = false;
-	bool identFlag = false;
-
-	string fileName;
-
-	bool fileNameGiven = false;
-
+	// Variables
 	ifstream file;
+	string fileName;
+	int lineNumber = 0;
+	int tokencounter = 0;
+	int filecounter = 0;
+	bool v = false;
+	bool iconst = false;
+	bool rconst = false;
+	bool sconst = false;
+	bool ident = false;
 
+	// No file name is given
 	if (argc < 2)
 	{
 		cout << "NO SPECIFIED INPUT FILE NAME." << endl;
 		return 0;
 	}
+
 	for (int i = 1; i < argc; i++)
 	{
-
-		string arg(argv[i]);
-
-		if (arg == "-v")
+		string newarg(argv[i]);
+		if (argv[i][0] == '-')
 		{
-			vFlag = true;
-			break;
-		}
-		else if (arg == "-iconst")
-		{
-			iconstFlag = true;
-			break;
-		}
-		else if (arg == "-rconst")
-		{
-			rconstFlag = true;
-			break;
-		}
-		else if (arg == "-sconst")
-		{
-			sconstFlag = true;
-			break;
-		}
-		else if (arg == "-ident")
-		{
-			identFlag = true;
-			break;
-		}
-		else if (arg[0] == '-')
-		{
-			cout << "UNRECOGNIZED FLAG " << arg << endl;
-			return 0;
-		}
-		else if (!fileNameGiven)
-		{
-			fileName = arg;
-			file.open(fileName);
-			if (!file.is_open())
+			if (newarg == "-v")
+				v = true;
+			else if (newarg == "-iconst")
 			{
-				cout << "CANNOT OPEN the File " << arg << endl;
+				iconst = true;
+			}
+			else if (newarg == "-rconst")
+			{
+				rconst = true;
+			}
+			else if (newarg == "-sconst")
+			{
+				sconst = true;
+			}
+			else if (newarg == "-ident")
+			{
+				ident = true;
+			}
+			else
+			{
+				cout << "UNRECOGNIZED FLAG " << newarg << endl;
 				return 0;
 			}
-			fileNameGiven = true;
 		}
-		else if (fileNameGiven)
+		else if (filecounter == 0)
+		{
+			filecounter++;
+			fileName = newarg;
+		}
+		else if (filecounter > 0)
 		{
 			cout << "ONLY ONE FILE NAME ALLOWED." << endl;
 			return 0;
 		}
 	}
 
-	map<string, LexItem> identMap;
-	map<int, LexItem> iconstMap;
-	map<double, LexItem> rconstMap;
-	map<string, LexItem> sconstMap;
+	file.open(fileName);
 
-	int LineCounter = 0;
-	int tokenCounter = 0;
-
-	LexItem tok;
-
-	while ((tok = getNextToken(file, LineCounter)) != DONE && tok != ERR)
+	if (file.is_open())
 	{
+		map<int, LexItem> iconstflag;
+		map<double, LexItem> rconstflag;
+		map<string, LexItem> sconstflag;
+		map<string, LexItem> identflag;
 
-		tokenCounter++;
-
-		if (vFlag)
+		while (true)
 		{
-			cout << tok << endl;
+			LexItem tok = getNextToken(file, lineNumber);
+
+			if (tok != DONE)
+				tokencounter += 1;
+
+			if (tok.GetToken() == DONE)
+			{
+				break;
+			}
+
+			if (tok.GetToken() == ERR)
+			{
+				return 0;
+			}
+
+			if (v)
+			{
+				cout << tok << endl;
+			}
+
+			// if flag then put into map
+			string nLexeme = tok.GetLexeme();
+			if (iconst && tok == ICONST)
+				iconstflag[stoi(nLexeme)] = tok;
+			if (rconst && tok == RCONST)
+				rconstflag[stod(nLexeme)] = tok;
+			if (sconst && tok == SCONST)
+				sconstflag[nLexeme] = tok;
+			if (ident && tok == IDENT)
+				identflag[nLexeme] = tok;
+		}
+		cout << "Lines: " << lineNumber << endl;
+
+		if (tokencounter != 0)
+			cout << "Tokens: " << tokencounter << endl;
+
+		// sconst flag output
+		if (sconst && !sconstflag.empty())
+		{
+			cout << "STRINGS:" << endl;
+			map<string, LexItem>::iterator itr3;
+			for (itr3 = sconstflag.begin(); itr3 != sconstflag.end(); itr3++)
+			{
+				cout << itr3->first << endl;
+			}
 		}
 
-		string newLexeme = tok.GetLexeme();
+		// iconst flag output
+		if (iconst && !iconstflag.empty())
+		{
+			cout << "INTEGERS:" << endl;
+			map<int, LexItem>::iterator itr;
+			for (itr = iconstflag.begin(); itr != iconstflag.end(); itr++)
+			{
+				cout << itr->first << endl;
+			}
+		}
 
-		if (tok == IDENT && identFlag)
+		// rconst flag output
+		if (rconst && !rconstflag.empty())
 		{
-			identMap[newLexeme] = tok;
+			cout << "REALS:" << endl;
+			map<double, LexItem>::iterator itr2;
+			for (itr2 = rconstflag.begin(); itr2 != rconstflag.end(); itr2++)
+			{
+				cout << itr2->first << endl;
+			}
 		}
-		if (tok == ICONST && iconstFlag)
+
+		// ident flag output
+		if (ident && !identflag.empty())
 		{
-			iconstMap[stoi(newLexeme)] = tok;
-		}
-		if (tok == RCONST && rconstFlag)
-		{
-			rconstMap[stod(newLexeme)] = tok;
-		}
-		if (tok == SCONST && sconstFlag)
-		{
-			sconstMap[newLexeme] = tok;
+			cout << "IDENTIFIERS:" << endl;
+			map<string, LexItem>::iterator itr4;
+			for (itr4 = identflag.begin(); itr4 != --identflag.end(); itr4++)
+			{
+				cout << itr4->first << ", ";
+			}
+			cout << itr4->first << endl;
 		}
 	}
 
-	if (identFlag)
+	else
 	{
-		tokenCounter++;
-		LineCounter++;
+		cout << "CANNOT OPEN the File " << fileName << endl;
 	}
-
-	cout << "Lines: " << LineCounter << endl;
-
-	if (tokenCounter != 0)
-	{
-		cout << "Tokens: " << tokenCounter << endl;
-	}
-
-	if (iconstFlag && !(iconstMap.empty()))
-	{
-		cout << "INTEGERS:" << endl;
-
-		map<int, LexItem>::iterator it;
-
-		for (it = iconstMap.begin(); it != iconstMap.end(); it++)
-		{
-			cout << it->first << endl;
-		}
-	}
-	if (rconstFlag && !(rconstMap.empty()))
-	{
-		cout << "REALS:" << endl;
-
-		map<double, LexItem>::iterator itTwo;
-
-		for (itTwo = rconstMap.begin(); itTwo != rconstMap.end(); itTwo++)
-		{
-			cout << itTwo->first << endl;
-		}
-	}
-	if (sconstFlag && !(sconstMap.empty()))
-	{
-		cout << "STRINGS:" << endl;
-
-		map<string, LexItem>::iterator itThree;
-
-		for (itThree = sconstMap.begin(); itThree != sconstMap.end(); itThree++)
-		{
-			cout << itThree->first << endl;
-		}
-	}
-	if (identFlag && !(identMap.empty()))
-	{
-		cout << "IDENTIFIERS:" << endl;
-
-		map<string, LexItem>::iterator itFour;
-
-		for (itFour = identMap.begin(); itFour != --identMap.end(); itFour++)
-		{
-			cout << itFour->first << ", ";
-		}
-		cout << itFour->first << endl;
-	}
-
 	return 0;
 }
