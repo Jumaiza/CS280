@@ -7,6 +7,7 @@ int maxValue;
 void PrintRevNums(int sum)
 {
 
+    // get user input
     int num;
     cin >> num;
 

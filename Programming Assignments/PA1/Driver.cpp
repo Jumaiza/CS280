@@ -14,9 +14,6 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 
-	int LineCounter = 0;
-	int tokenCounter = 0;
-
 	bool vFlag = false;
 	bool iconstFlag = false;
 	bool rconstFlag = false;
@@ -42,26 +39,32 @@ int main(int argc, char *argv[])
 		if (arg == "-v")
 		{
 			vFlag = true;
+			break;
 		}
 		else if (arg == "-iconst")
 		{
 			iconstFlag = true;
+			break;
 		}
 		else if (arg == "-rconst")
 		{
 			rconstFlag = true;
+			break;
 		}
 		else if (arg == "-sconst")
 		{
 			sconstFlag = true;
+			break;
 		}
 		else if (arg == "-ident")
 		{
 			identFlag = true;
+			break;
 		}
 		else if (arg[0] == '-')
 		{
-			cout << "UNRECOGNIZED FLAG" << arg << endl;
+			cout << "UNRECOGNIZED FLAG " << arg << endl;
+			return 0;
 		}
 		else if (!fileNameGiven)
 		{
@@ -81,56 +84,50 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	cout << fileName << endl;
-
 	map<string, LexItem> identMap;
 	map<int, LexItem> iconstMap;
 	map<double, LexItem> rconstMap;
 	map<string, LexItem> sconstMap;
 
-	while (true)
-	{
-		LexItem tok = getNextToken(file, LineCounter);
+	int LineCounter = 0;
+	int tokenCounter = 0;
 
-		if (tok.GetToken() == DONE)
-		{
-			break;
-		}
-		else if (tok.GetToken() == ERR)
-		{
-			return 0;
-		}
-		else
-		{
-			tokenCounter++;
-		}
+	LexItem tok;
+
+	while ((tok = getNextToken(file, LineCounter)) != DONE && tok != ERR)
+	{
+
+		tokenCounter++;
 
 		if (vFlag)
 		{
 			cout << tok << endl;
 		}
-		else
+
+		string newLexeme = tok.GetLexeme();
+
+		if (tok == IDENT && identFlag)
 		{
-
-			string newLexeme = tok.GetLexeme();
-
-			if (tok == IDENT && identFlag)
-			{
-				identMap[newLexeme] = tok;
-			}
-			if (tok == ICONST && iconstFlag)
-			{
-				iconstMap[stoi(newLexeme)] = tok;
-			}
-			if (tok == RCONST && rconstFlag)
-			{
-				rconstMap[stod(newLexeme)] = tok;
-			}
-			if (tok == SCONST && sconstFlag)
-			{
-				sconstMap[newLexeme] = tok;
-			}
+			identMap[newLexeme] = tok;
 		}
+		if (tok == ICONST && iconstFlag)
+		{
+			iconstMap[stoi(newLexeme)] = tok;
+		}
+		if (tok == RCONST && rconstFlag)
+		{
+			rconstMap[stod(newLexeme)] = tok;
+		}
+		if (tok == SCONST && sconstFlag)
+		{
+			sconstMap[newLexeme] = tok;
+		}
+	}
+
+	if (identFlag)
+	{
+		tokenCounter++;
+		LineCounter++;
 	}
 
 	cout << "Lines: " << LineCounter << endl;
@@ -170,7 +167,7 @@ int main(int argc, char *argv[])
 
 		for (itThree = sconstMap.begin(); itThree != sconstMap.end(); itThree++)
 		{
-			cout << "'" << itThree->first << "'" << endl;
+			cout << itThree->first << endl;
 		}
 	}
 	if (identFlag && !(identMap.empty()))

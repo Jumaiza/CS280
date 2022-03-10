@@ -150,7 +150,8 @@ LexItem getNextToken(istream &in, int &linenumber)
             {
                 in.putback(character);
                 lexState = START;
-                return LexItem(IDENT, lexeme, linenumber);
+                // return LexItem(IDENT, lexeme, linenumber);
+                return id_or_kw(lexeme, linenumber);
                 break;
             }
             else
@@ -165,6 +166,12 @@ LexItem getNextToken(istream &in, int &linenumber)
             {
                 return LexItem(ERR, lexeme, linenumber);
             }
+            else if (character == '\n')
+            {
+                lexeme += character;
+                cout << "Error in line " << linenumber << " (" << lexeme << endl;
+                return LexItem(ERR, lexeme, linenumber);
+            }
             else if (character != '\'')
             {
                 lexeme += character;
@@ -172,6 +179,7 @@ LexItem getNextToken(istream &in, int &linenumber)
             }
             else
             {
+                lexeme += character;
                 lexState = START;
                 return LexItem(SCONST, lexeme, linenumber);
                 break;
@@ -182,24 +190,23 @@ LexItem getNextToken(istream &in, int &linenumber)
             {
                 return LexItem(ERR, lexeme, linenumber);
             }
-            else if (!(isdigit(character)))
+            else if (character == '.')
             {
-                // end
-                if (character == '.')
-                {
-                    lexState = INREAL;
-                    break;
-                }
-                else
-                {
-                    lexState = START;
-                    return LexItem(ICONST, lexeme, linenumber);
-                    break;
-                }
+                lexState = INREAL;
+                lexeme += character;
+                continue;
             }
+            else if (!isdigit(character))
+            {
+                in.putback(character);
+                return LexItem(ICONST, lexeme, linenumber);
+                lexState = START;
+                continue;
+            }
+            else
             {
                 lexeme += character;
-                break;
+                continue;
             }
 
         case INREAL:
@@ -214,6 +221,11 @@ LexItem getNextToken(istream &in, int &linenumber)
                 lexState = START;
                 return LexItem(RCONST, lexeme, linenumber);
                 break;
+            }
+            else
+            {
+                lexeme += character;
+                continue;
             }
         case INCOMMENT:
 
@@ -242,6 +254,13 @@ LexItem getNextToken(istream &in, int &linenumber)
 LexItem id_or_kw(const string &lexeme, int linenum)
 {
 
+    string lexemeUpper = lexeme;
+
+    for (int i = 0; i < lexemeUpper.length(); i++)
+    {
+        lexemeUpper[i] = toupper(lexemeUpper[i]);
+    }
+
     // converts string to token
     map<string, Token> StringToToken =
         {{"IDENT", IDENT}, {"ICONST", ICONST}, {"RCONST", RCONST}, {"SCONST", SCONST}, {"PLUS", PLUS}, {"MINUS", MINUS}, {"MULT", MULT}, {"PROGRAM", PROGRAM}, {"WRITELN", WRITELN}, {"INTEGER", INTEGER}, {"BEGIN", BEGIN}, {"END", END}, {"IF", IF}, {"REAL", REAL}, {"STRING", STRING}, {"VAR", VAR}, {"ELSE", ELSE}, {"FOR", FOR}, {"THEN", THEN}, {"DO", DO}, {"TO", TO}, {"DOWNTO", DOWNTO}, {"DIV", DIV}, {":=", ASSOP}, {"LPAREN", LPAREN}, {"RPAREN", RPAREN}, {"COMMA", COMMA}, {"EQUAL", EQUAL}, {"GTHAN", GTHAN}, {"LTHAN", LTHAN}, {"SEMICOL", SEMICOL}, {"COLON", COLON}, {"ERR", ERR}, {"DONE", DONE}};
@@ -250,16 +269,16 @@ LexItem id_or_kw(const string &lexeme, int linenum)
     Token currentToken = IDENT;
 
     // iterates through map boolean value
-    map<string, Token>::iterator MapIterator = StringToToken.find(lexeme);
+    map<string, Token>::iterator MapIterator = StringToToken.find(lexemeUpper);
 
-    // determines if it is a keyword or identifier
+    // determines the keyword was found
     if (StringToToken.end() != MapIterator)
     {
         currentToken = MapIterator->second;
     }
 
     // return lexitem with new token
-    return LexItem(currentToken, lexeme, linenum);
+    return LexItem(currentToken, lexemeUpper, linenum);
 }
 
 ostream &operator<<(ostream &out, const LexItem &tok)
