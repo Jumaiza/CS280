@@ -1,0 +1,22 @@
+PROGRAM circle;
+	(*Missing Initialization Value in For Statement*)
+VAR
+	(*Variable declarations*)
+	r, a, p, b : REAL; 
+	i, j, sum : INTEGER;	
+BEGIN
+	r := 8;
+	p := 0;
+	a := 0;
+	sum := 0;
+	j := -1;
+	IF ( r > 5) THEN
+	  	FOR i :=  downto 10 do sum := sum + i
+	ELSE
+		IF ( r < 0) THEN p := 0;
+		
+	
+	      
+	(*Display the results*)
+	WRITELN  ('The output results are ' , r, p, b);
+END

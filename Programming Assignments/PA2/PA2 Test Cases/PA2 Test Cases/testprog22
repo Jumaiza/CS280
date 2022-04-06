@@ -1,0 +1,24 @@
+PROGRAM circle;
+	(*Unrecognizable Declaration Block*)
+
+	(*Variable declarations*)
+	r, a, p, b : REAL; 
+	i, j, sum : INTEGER;
+	str1, str2: STRING;	
+BEGIN
+	r := 8;
+	p := 0;
+	a := 0;
+	sum := 0;
+	str1 := 'Hello World!';
+	j := -1;
+	IF ( r > 5) THEN
+	  	a := (3.14) + j * - r
+	ELSE
+		IF (r = 0 ) THEN p := 0;
+		
+	FOR i := 4 downto 10 DO sum := sum + i;
+	      
+	(*Display the results*)
+	WRITELN  ('The output results are ' , r, str1, b);
+END
