@@ -24,8 +24,8 @@ int main(int argc, char *argv[])
 	int filecounter = 0;
 	bool v = false;
 	bool iconst = false;
-	bool rconst = false;
 	bool sconst = false;
+	bool rconst = false;
 	bool ident = false;
 
 	// No file name is given
