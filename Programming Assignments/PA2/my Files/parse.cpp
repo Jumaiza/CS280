@@ -49,67 +49,49 @@ void ParseError(int line, string msg)
 	cout << line << ": " << msg << endl;
 }
 
-/*
-	Prog ::= PROGRAM IDENT; DeclBlock ProgBody
-	DeclBlock ::= VAR {DeclStmt;}
-	DeclStmt ::= Ident {, Ident} : (Integer | Real | String)
-	ProgBody ::= BEGIN {Stmt;} END
-	Stmt ::= AssignStmt | IfStmt | WriteLnStmt | ForStmt
-	WriteLnStmt ::= WRITELN (ExprList)
-	IfStmt ::= IF ( LogicExpr ) THEN Stmt [ELSE Stmt]
-	ForStmt ::= FOR Var := ICONST (TO | DOWNTO) ICONST DO Stmt
-	AssignStmt ::= Var := Expr
-	ExprList ::= Expr {, Expr}
-	Expr ::= Term {(+|-) Term}
-	Term ::= SFactor {( * | / ) SFactor}
-	SFactor ::= [(+ | -)] Factor
-	LogicExpr ::= Expr (= | > | <) Expr
-	Var ::= IDENT
-	Factor ::= IDENT | ICONST | RCONST | SCONST | (Expr)
-*/
-
-bool Program(istream &in, int &line)
+bool Prog(istream &in, int &line)
 {
-	LexItem currentKeyword = Parser::GetNextToken(in, line);
 
-	if (currentKeyword != PROGRAM)
+	if (Parser::GetNextToken(in, line) != PROGRAM)
 	{
 		ParseError(line, "Missing PROGRAM.");
+		// print error no program
 		return false;
 	}
-	else
-	{
-		currentKeyword = Parser::GetNextToken(in, line);
-	}
 
-	if (currentKeyword != IDENT)
+	LexItem identToken = Parser::GetNextToken(in, line);
+
+	if (identToken != IDENT)
 	{
 		ParseError(line, "Missing Program Name.");
+		// print error no name
 		return false;
 	}
-	else
-	{
-		defVar[currentKeyword.GetLexeme()] = true;
-		currentKeyword = Parser::GetNextToken(in, line);
-	}
 
-	if (currentKeyword != SEMICOL)
+	// save ident in map
+	defVar[identToken.GetLexeme()] = true;
+
+	if (Parser::GetNextToken(in, line) != SEMICOL)
 	{
 		ParseError(line, "Missing semicolon in Statement.");
+		// print error no semicolon
 		return false;
 	}
 
 	if (!DeclBlock(in, line))
 	{
-		ParseError(line, "Incorrect Declaration Section");
+		ParseError(line, "Incorrect Declaration Section.");
+		// print error wrong declaration section
 		return false;
 	}
 
-	if (ProgBody(in, line))
+	if (!ProgBody(in, line))
 	{
 		ParseError(line, "Incorrect Program Body.");
+		// print error wrong body
 		return false;
 	}
+
 	return true;
 }
 
@@ -119,33 +101,42 @@ bool DeclBlock(istream &in, int &line)
 	if (Parser::GetNextToken(in, line) != VAR)
 	{
 		ParseError(line, "Missing 'VAR' in DeclBlock");
+		// print error no var
 		return false;
 	}
 
-	while (true)
-	{
-		LexItem currentKey = Parser::GetNextToken(in, line);
+	bool RunLoop = true;
 
-		if (currentKey == BEGIN)
+	while (RunLoop)
+	{
+		LexItem currentToken = Parser::GetNextToken(in, line);
+
+		if (currentToken == BEGIN)
 		{
-			Parser::PushBackToken(currentKey);
+			// bring token back
+			Parser::PushBackToken(currentToken);
 			break;
 		}
 		else
 		{
-			Parser::PushBackToken(currentKey);
+			Parser::PushBackToken(currentToken);
 		}
 
+		// check statement
 		if (!DeclStmt(in, line))
 		{
 			ParseError(line, "Syntactic error in Declaration Block.");
+			// print error syntax in decblock
 			return false;
 		}
 
-		currentKey = Parser::GetNextToken(in, line);
-		if (currentKey != SEMICOL)
+		// get semicolon
+		currentToken = Parser::GetNextToken(in, line);
+
+		if (currentToken != SEMICOL)
 		{
-			ParseError(line, "Missing semicol");
+			ParseError(line, "Missing semicolon");
+			// print error no semicol
 			return false;
 		}
 	}
@@ -154,61 +145,112 @@ bool DeclBlock(istream &in, int &line)
 
 bool DeclStmt(istream &in, int &line)
 {
-	LexItem currentKey = Parser::GetNextToken(in, line);
+	// left of statement
 
-	while (currentKey == IDENT || currentKey == COMMA)
+	bool runLoop = true;
+
+	while (runLoop)
 	{
-		if (currentKey == IDENT)
+		LexItem currentToken = Parser::GetNextToken(in, line);
+
+		if (currentToken != IDENT)
 		{
-			if (defVar[currentKey.GetLexeme()] == true)
-			{
-				ParseError(line, "Ident already defined");
-				return false;
-			}
+			ParseError(line, "Not Ident in DeclStmt");
+			// not an identifier
+			return false;
 		}
-		currentKey = Parser::GetNextToken(in, line);
-	}
 
-	if (currentKey != COLON)
-	{
-		ParseError(line, "Unrecognized Input Pattern");
-		cout << "(" << currentKey.GetLexeme() << ")" << endl;
-		ParseError(line, "Incorrect variable in Declaration Statement.");
-		return false;
-	}
-	else
-	{
-		currentKey = Parser::GetNextToken(in, line);
-	}
+		bool isDefined = defVar.find(currentToken.GetLexeme())->second == true;
 
-	if (currentKey != REAL || currentKey != INTEGER || currentKey != STRING)
-	{
-		ParseError(line, "Incorrect Declaration Type.");
-		return false;
-	}
-	return true;
-}
-
-// ProgBody ::= BEGIN {Stmt;} END
-bool ProdBody(istream &in, int &line)
-{
-	LexItem currentKey = Parser::GetNextToken(in, line);
-
-	while (currentKey != END)
-	{
-		if (!Stmt(in, line))
+		if (isDefined)
 		{
-			ParseError(line, "Syntactic error in Program Body.");
+			ParseError(line, "Variable Redefinition");
+			// print error already defined
+			ParseError(line, "Incorrect variable in Declaration Statement.");
+			// wrong variable
 			return false;
 		}
 		else
 		{
-			currentKey = Parser::GetNextToken(in, line);
+
+			defVar[currentToken.GetLexeme()] = true;
 		}
 
-		if (currentKey != SEMICOL)
+		LexItem commaToken = Parser::GetNextToken(in, line);
+
+		if (commaToken != COMMA)
 		{
-			ParseError(line, "Missing semicolon in Statement.");
+			Parser::PushBackToken(commaToken);
+			// take back token
+			break;
+		}
+	}
+
+	// colon
+
+	LexItem colonToken = Parser::GetNextToken(in, line);
+
+	if (colonToken != COLON)
+	{
+		ParseError(line, "Unrecognized Input Pattern");
+		// print token lexeme with error
+		cout << "(" << colonToken.GetLexeme() << ")" << endl;
+		// return error wrong var
+		ParseError(line, "Incorrect variable in Declaration Statement.");
+		// exit
+		return false;
+	}
+
+	// right side
+
+	LexItem dataType = Parser::GetNextToken(in, line);
+
+	if (dataType != INTEGER && dataType != REAL && dataType != STRING)
+	{
+		ParseError(line, "Incorrect Declaration Type.");
+		// error wrong data type
+		return false;
+	}
+
+	return true;
+}
+
+bool ProgBody(istream &in, int &line)
+{
+
+	bool runLoop = true;
+	// placement boolean
+
+	while (runLoop)
+	{
+		LexItem currentToken = Parser::GetNextToken(in, line);
+
+		if (currentToken == BEGIN)
+		{
+			continue;
+		}
+		else if (currentToken == END)
+		{
+			break;
+		}
+		else
+		{
+			Parser::PushBackToken(currentToken);
+		}
+
+		if (Stmt(in, line) == false)
+		{
+			ParseError(line, "Syntactic error in Program Body.");
+			// send syntax error in progbody
+			return false;
+		}
+
+		LexItem semiColonToken = Parser::GetNextToken(in, line);
+
+		if (!(semiColonToken == SEMICOL))
+		{
+			ParseError(line--, "Missing semicolon in Statement.");
+			// print error no semicolon
 			return false;
 		}
 	}
@@ -218,124 +260,129 @@ bool ProdBody(istream &in, int &line)
 
 bool Stmt(istream &in, int &line)
 {
-	bool status;
-	// cout << "in ContrlStmt" << endl;
-	LexItem t = Parser::GetNextToken(in, line);
+	bool statementStatus;
 
-	switch (t.GetToken())
+	LexItem currentToken = Parser::GetNextToken(in, line);
+
+	// switch been different statments
+	switch (currentToken.GetToken())
 	{
 
 	case WRITELN:
-		status = WriteLnStmt(in, line);
-		// cout << "After WriteStmet status: " << (status? true:false) <<endl;
+		// send to write line statment
+		statementStatus = WriteLnStmt(in, line);
+		// break from switch
 		break;
 
 	case IF:
-		status = IfStmt(in, line);
+		// send to if statement
+		statementStatus = IfStmt(in, line);
+		// exit
 		break;
 
 	case IDENT:
-		Parser::PushBackToken(t);
-		status = AssignStmt(in, line);
-
+		// send ident back
+		Parser::PushBackToken(currentToken);
+		// send to assignstmet
+		statementStatus = AssignStmt(in, line);
+		// exit
 		break;
 
 	case FOR:
-		status = ForStmt(in, line);
+		// send to for function
+		statementStatus = ForStmt(in, line);
+		// exit
 		break;
 
 	default:
-		Parser::PushBackToken(t);
+		// else push back nand return false
+		Parser::PushBackToken(currentToken);
 		return false;
 	}
 
-	return status;
-} // End of Stmt
+	return statementStatus;
+}
 
-// WriteStmt:= wi, ExpreList
 bool WriteLnStmt(istream &in, int &line)
 {
-	LexItem t;
-	// cout << "in WriteStmt" << endl;
+	LexItem currentToken = Parser::GetNextToken(in, line);
 
-	t = Parser::GetNextToken(in, line);
-	if (t != LPAREN)
+	if (currentToken != LPAREN)
 	{
-
 		ParseError(line, "Missing Left Parenthesis");
+		// print error no left parenth
 		return false;
 	}
 
-	bool ex = ExprList(in, line);
+	bool expression = ExprList(in, line);
 
-	if (!ex)
+	if (!expression)
 	{
 		ParseError(line, "Missing expression after WriteLn");
+		// print error no expression
 		return false;
 	}
 
-	t = Parser::GetNextToken(in, line);
-	if (t != RPAREN)
+	currentToken = Parser::GetNextToken(in, line);
+
+	if (currentToken != RPAREN)
 	{
-
 		ParseError(line, "Missing Right Parenthesis");
+		// print error no right parenth
 		return false;
 	}
-	// Evaluate: print out the list of expressions values
 
-	return ex;
+	return expression;
 }
 
 bool IfStmt(istream &in, int &line)
 {
 	LexItem currentToken = Parser::GetNextToken(in, line);
+
 	if (currentToken != LPAREN)
 	{
 		ParseError(line, "Missing Left Parenthesis in IfStmt");
+		// print error no left parenth
 		return false;
 	}
 
 	if (!LogicExpr(in, line))
 	{
-		// ParseError(line, "Logical Expression flawed in IfStmt");
+		// exit
 		return false;
 	}
-	else
-	{
-		currentToken = Parser::GetNextToken(in, line);
-	}
+
+	currentToken = Parser::GetNextToken(in, line);
 
 	if (currentToken != RPAREN)
 	{
 		ParseError(line, "Missing Right Parenthesis after logical in IfStmt");
+		// print error no right parenth
 		return false;
 	}
-	else
-	{
-		currentToken = Parser::GetNextToken(in, line);
-	}
 
+	currentToken = Parser::GetNextToken(in, line);
 	if (currentToken != THEN)
 	{
 		ParseError(line, "Missing THEN after LogicExpr in IfStmt");
+		// print error no right parenth
 		return false;
 	}
 
 	if (!Stmt(in, line))
 	{
 		ParseError(line, "Missing Statement for If-Stmt Then-Part");
+		// print error no stmt
 		return false;
 	}
-	else
-	{
-		currentToken = Parser::GetNextToken(in, line);
-	}
 
+	currentToken = Parser::GetNextToken(in, line);
 	if (currentToken == ELSE)
 	{
 		if (!Stmt(in, line))
 		{
 			ParseError(line, "Stmt wrong in IfStmt's else");
+			// print error wrong statment
 			return false;
 		}
 	}
@@ -351,83 +398,95 @@ bool ForStmt(istream &in, int &line)
 {
 
 	LexItem currentToken = Parser::GetNextToken(in, line);
-
 	if (currentToken != IDENT)
 	{
 		ParseError(line, "no IDENT after FOR");
+		// print error no ident
 		return false;
 	}
-	else
-	{
 
-		currentToken = Parser::GetNextToken(in, line);
-	}
-
-	if (currentToken != ASSOP)
+	LexItem operatorToken = Parser::GetNextToken(in, line);
+	if (operatorToken != ASSOP)
 	{
 		ParseError(line, "no ASSOP after Variable in For");
+		// print error no operator
 		return false;
 	}
-	else
-	{
 
-		currentToken = Parser::GetNextToken(in, line);
-	}
-
-	if (currentToken != ICONST)
+	LexItem iconstToken = Parser::GetNextToken(in, line);
+	if (iconstToken != ICONST)
 	{
 		ParseError(line, "No ICONST assignment in for");
+		// print error no iconst
 		return false;
 	}
-	else
-	{
 
-		currentToken = Parser::GetNextToken(in, line);
-	}
-
-	if (currentToken != TO && currentToken != DOWNTO)
+	LexItem assginmentToken = Parser::GetNextToken(in, line);
+	if (assginmentToken != TO && assginmentToken != DOWNTO)
 	{
 		ParseError(line, "No TO or DOWNTO assignment in for");
+		// print error no assignment
 		return false;
 	}
-	else
-	{
 
-		currentToken = Parser::GetNextToken(in, line);
-	}
-
-	if (currentToken != ICONST)
+	LexItem newIconstToken = Parser::GetNextToken(in, line);
+	if (newIconstToken != ICONST)
 	{
 		ParseError(line, "No ICONST assignment in for after To/DOWNTO");
+		// print error no iconst after assginment
 		return false;
 	}
-	else
-	{
-		currentToken = Parser::GetNextToken(in, line);
-	}
 
-	if (currentToken != DO)
+	LexItem doToken = Parser::GetNextToken(in, line);
+	if (doToken != DO)
 	{
 		ParseError(line, "No DO in for");
+		// print error no do
 		return false;
 	}
 
 	if (!Stmt(in, line))
 	{
 		ParseError(line, "Stmt wrong in For loop");
+		// print error wrong statement
 		return false;
 	}
 
 	return true;
 }
 
+bool AssignStmt(istream &in, int &line)
+{
+	if (!Var(in, line))
+	{
+		ParseError(line, "Missing Left-Hand Side Variable in Assignment statement");
+		// print error no var
+		return false;
+	}
+	else if (Parser::GetNextToken(in, line) != ASSOP)
+	{
+		ParseError(line, "Missing Assignment Operator");
+		// print error no assignment
+		return false;
+	}
+	else if (!Expr(in, line))
+	{
+		ParseError(line, "Missing Expression in Assignment Statment");
+		// print error no expression
+		return false;
+	}
+	return true;
+}
+
 bool ExprList(istream &in, int &line)
 {
-	bool expressionIsGood = Expr(in, line);
+	bool expressionStatus = false;
 
-	if (!expressionIsGood)
+	expressionStatus = Expr(in, line);
+	if (!expressionStatus)
 	{
-		ParseError(line, "Missing Expression in ExprList");
+		ParseError(line, "Missing Expression");
+		// print error no expression
 		return false;
 	}
 
@@ -435,47 +494,91 @@ bool ExprList(istream &in, int &line)
 
 	if (currentToken == COMMA)
 	{
-		expressionIsGood = ExprList(in, line);
+		expressionStatus = ExprList(in, line);
 	}
 	else if (currentToken.GetToken() == ERR)
 	{
 		ParseError(line, "Unrecognized Input Pattern");
+		// print error wrong input
+		cout << "(" << currentToken.GetLexeme() << ")" << endl;
+		// print lexeme
 		return false;
 	}
 	else
 	{
 		Parser::PushBackToken(currentToken);
+		// send back
 		return true;
 	}
-
-	return expressionIsGood;
+	return expressionStatus;
 }
 
 bool Expr(istream &in, int &line)
 {
-	LexItem currentToken = Parser::GetNextToken(in, line);
 
-	while (currentToken != ERR)
+	bool runLoop = true;
+
+	while (runLoop)
 	{
+		LexItem currentToken;
 
-		bool TermIsGood = Term(in, line);
-
-		if (!TermIsGood)
+		if (!Term(in, line))
 		{
 			ParseError(line, "Missing operand after operator");
 			return false;
 		}
 
-		if (currentToken != PLUS && currentToken != MINUS)
+		currentToken = Parser::GetNextToken(in, line);
+
+		if (currentToken == ERR)
 		{
+			// wrong input
+			return false;
+		}
+		if (currentToken != MINUS && currentToken != PLUS)
+		{
+			// send back
 			Parser::PushBackToken(currentToken);
 			break;
 		}
+	}
+	return true;
+}
 
-		currentToken = Parser::GetNextToken(in, line);
+bool Term(istream &in, int &line)
+{
+	bool runLoop = true;
+
+	while (runLoop)
+	{
+		if (SFactor(in, line) == false)
+		{
+			// go back
+			return false;
+		}
+
+		LexItem currentToken = Parser::GetNextToken(in, line);
+		if (currentToken != MULT && currentToken != DIV)
+		{
+			// push back
+			Parser::PushBackToken(currentToken);
+			break;
+		}
+	}
+	return true;
+}
+
+bool SFactor(istream &in, int &line)
+{
+	LexItem currentToken = Parser::GetNextToken(in, line);
+
+	if (currentToken != PLUS && currentToken != MINUS)
+	{
+		Parser::PushBackToken(currentToken);
 	}
 
-	if (currentToken == ERR)
+	int num = 0;
+	if (Factor(in, line, num) == false)
 	{
 		return false;
 	}
@@ -483,48 +586,27 @@ bool Expr(istream &in, int &line)
 	return true;
 }
 
-bool Term(istream &in, int &line)
+bool LogicExpr(istream &in, int &line)
 {
-	while (true)
+
+	if (Expr(in, line) == false)
 	{
-		bool SfactorIsGood = SFactor(in, line);
-
-		if (!SfactorIsGood)
-		{
-			return false;
-		}
-		LexItem currentToken = Parser::GetNextToken(in, line);
-
-		if (currentToken != MULT && currentToken != DIV)
-		{
-			Parser::PushBackToken(currentToken);
-			break;
-		}
+		ParseError(line, "left expr wrong in LogicExpr");
+		// print error wrong left expression
+		return false;
 	}
-	return true;
-}
-bool SFactor(istream &in, int &line)
-{
+
 	LexItem currentToken = Parser::GetNextToken(in, line);
-
-	int sign = 0;
-
-	if (currentToken == PLUS)
+	if (currentToken != GTHAN && currentToken != EQUAL && currentToken != LTHAN)
 	{
-		sign = 1;
+		ParseError(line, "Operator not correct in LogicExpr");
+		// print error wrong operator
+		return false;
 	}
-	else if (currentToken == MINUS)
+	else if (Expr(in, line) == false)
 	{
-		sign = -1;
-	}
-	else
-	{
-		Parser::PushBackToken(currentToken);
-	}
-
-	bool factorIsGood = Factor(in, line, sign);
-	if (!factorIsGood)
-	{
+		ParseError(line, "Missing if statement Logic Expression");
+		// print error no statement
 		return false;
 	}
 
@@ -535,39 +617,41 @@ bool Factor(istream &in, int &line, int sign)
 {
 	LexItem currentToken = Parser::GetNextToken(in, line);
 
-	if ((currentToken == ICONST) || (currentToken == RCONST) || (currentToken == SCONST))
+	if (currentToken == SCONST || currentToken == ICONST || currentToken == RCONST)
 	{
+		// factor is good
 		return true;
 	}
 	else if (currentToken == IDENT)
 	{
-		if (defVar.find(currentToken.GetLexeme()) == defVar.end())
+		bool identFound = defVar.find(currentToken.GetLexeme()) == defVar.end();
+
+		if (identFound)
 		{
 			ParseError(line, "Using Undefined Variable");
+			// ident not found in map
 			return false;
 		}
-		return true;
+		else
+			return true;
 	}
 	else if (currentToken != LPAREN)
 	{
+		// no left paranth
 		return false;
 	}
 
-	bool exprIsGood = Expr(in, line);
-
-	if (!exprIsGood)
+	if (Expr(in, line) == false)
 	{
 		ParseError(line, "Missing expression after LPAREN in Factor");
 		return false;
 	}
-	else
-	{
-		currentToken = Parser::GetNextToken(in, line);
-	}
 
-	if (currentToken != RPAREN)
+	LexItem rParenthToken = Parser::GetNextToken(in, line);
+	if (rParenthToken != RPAREN)
 	{
 		ParseError(line, "Missing ) after expression");
+		// print error no right parenth
 		return false;
 	}
 
@@ -581,79 +665,15 @@ bool Var(istream &in, int &line)
 	if (currentToken != IDENT)
 	{
 		ParseError(line, "not a valid variable because Not an IDENT in Var");
+		// print error wrong var
 		return false;
 	}
-	else if ((defVar.find(currentToken.GetLexeme())->second) == false)
+	bool isDeclared = defVar.find(currentToken.GetLexeme())->second == true;
+	if (!isDeclared)
 	{
 		ParseError(line, "Undeclared Variable");
+		// print error not declared
 		return false;
 	}
 	return true;
-}
-
-bool AssignStmt(istream &in, int &line)
-{
-	LexItem currrentToken = Parser::GetNextToken(in, line);
-
-	if (Var(in, line))
-	{
-		ParseError(line, "Missing Left-Hand Side Variable in Assignment statement");
-		return false;
-	}
-	else
-	{
-		currrentToken = Parser::GetNextToken(in, line);
-	}
-
-	if (currrentToken != ASSOP)
-	{
-		ParseError(line, "Missing Assignment Operator");
-		return false;
-	}
-	else
-	{
-		currrentToken = Parser::GetNextToken(in, line);
-	}
-
-	if (Expr(in, line))
-	{
-		ParseError(line, "Missing Expression in Assignment Statment");
-		return false;
-	}
-
-	return true;
-}
-
-// ExprList:= Expr {,Expr}
-bool ExprList(istream &in, int &line)
-{
-	bool status = false;
-	// cout << "in ExprList and before calling Expr" << endl;
-	status = Expr(in, line);
-	if (!status)
-	{
-		ParseError(line, "Missing Expression");
-		return false;
-	}
-
-	LexItem tok = Parser::GetNextToken(in, line);
-
-	if (tok == COMMA)
-	{
-		// cout << "before calling ExprList" << endl;
-		status = ExprList(in, line);
-		// cout << "after calling ExprList" << endl;
-	}
-	else if (tok.GetToken() == ERR)
-	{
-		ParseError(line, "Unrecognized Input Pattern");
-		cout << "(" << tok.GetLexeme() << ")" << endl;
-		return false;
-	}
-	else
-	{
-		Parser::PushBackToken(tok);
-		return true;
-	}
-	return status;
 }

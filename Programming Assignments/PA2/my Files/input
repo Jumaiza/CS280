@@ -1,0 +1,19 @@
+PROGRAM circle;
+VAR
+	(*Incorrect Type*)
+	(*Variable declarations*)
+	r, a, p, b : FLOAT; 
+	i, j, r : INTEGER;	
+BEGIN
+	r = 8;
+	p = 0;
+	a = 0;
+	
+	j = -1;
+	IF ( r > 5)
+	  a = (3.14) * r * r;
+	IF (a < 100)
+	    p = 2 * 3.14 * b; 
+	(*Display the results*)
+	WRITELN ( "The output results are " , r, p, b);
+END  
