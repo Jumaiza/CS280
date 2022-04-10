@@ -675,5 +675,6 @@ bool Var(istream &in, int &line)
 		// print error not declared
 		return false;
 	}
+
 	return true;
 }
