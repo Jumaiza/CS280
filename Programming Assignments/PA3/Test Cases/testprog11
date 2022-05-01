@@ -1,0 +1,23 @@
+PROGRAM circle;
+	(*Clean Program Testing nested If statements*)
+VAR
+	(*Variable declarations*)
+	r, a, p, b : REAL; 
+	i, j, sum : INTEGER;
+	str1, str2: STRING;	
+BEGIN
+	i := 8;
+	p := 6;
+	a := 0;
+	sum := 0;
+	str1 := 'Hello World!';
+	j := -3;
+	IF ( p < 5) THEN
+	  	a := (3.14) + j * - p
+	ELSE
+		IF (p > 0 ) THEN str1 := 'Goodbye!';
+		
+	     
+	(*Display the results*)
+	WRITELN  ('The output results are: ' , p, ' ', str1, ' ', a, ' ', i);
+END

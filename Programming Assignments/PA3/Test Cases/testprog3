@@ -1,0 +1,18 @@
+PROGRAM circle;
+	(*Testing divide by zero execution error*)
+VAR
+	(*Variable declarations*)
+	r, p, a : REAL; 
+	str : String;
+BEGIN
+	r := 8;
+	p := 0 ;
+	a := r/p;
+	IF ( p = 5) THEN
+	  	a := (3.14) + r * p
+	ELSE
+		a := p;
+		
+	(*Display the results*)
+	WRITELN  ('The output results are ' , r, ' ', p, ' ', a);
+END

@@ -1,0 +1,16 @@
+PROGRAM circle;
+	(*Testing Assignment and If Statements*)
+VAR
+	(*Variable declarations*)
+	p, a : REAL; 
+	r : INTEGER;
+	
+BEGIN
+	r := 8;
+	p := 6;
+	IF ( p > 5) THEN
+	  	a := (3.14) + r * p;
+			
+	(*Display the results*)
+	WRITELN  ('The output results are ' , r, ' ', p, ' ', a);
+END

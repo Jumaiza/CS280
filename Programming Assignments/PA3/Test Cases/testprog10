@@ -1,0 +1,13 @@
+PROGRAM circle;
+	(*Testing divide by zero execution error*)
+VAR
+	(*Variable declarations*)
+	r, p, a : REAL; 
+	str1, str2 : String;
+BEGIN
+	str1 := 'Good Morning';
+	str2 := str1 + ' ' + 'NJIT' ;
+			
+	(*Display the results*)
+	WRITELN  ('The output results are ' , str1, ', ', str2);
+END

@@ -1,0 +1,12 @@
+PROGRAM circle;
+	(*Undefined variable*)
+VAR
+	(*Variable declarations*)
+	r, p : REAL; 
+	
+BEGIN
+	r := 8;
+	
+	(*Display the results*)
+	WRITELN  ('The output results are ' , r, p);
+END

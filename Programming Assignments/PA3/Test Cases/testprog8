@@ -1,0 +1,17 @@
+PROGRAM circle;
+	(*Testing If Statement Else part*)
+VAR
+	(*Variable declarations*)
+	r, p, a : REAL; 
+	
+BEGIN
+	r := 8;
+	p := 4;
+	IF ( p > 5) THEN
+	  	a := (3.14) + r * p
+	ELSE
+		a := p;
+		
+	(*Display the results*)
+	WRITELN  ('The output results are ' , r, ' ', p, ' ', a);
+END

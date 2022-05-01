@@ -1,0 +1,15 @@
+PROGRAM circle;
+	(*Undefined variable*)
+VAR
+	(*Variable declarations*)
+	r, p : REAL; 
+	str: String;
+	
+BEGIN
+	r := 8;
+	p := +5;
+	str := +'Hello';
+	
+	(*Display the results*)
+	WRITELN  ('The output results are ' , r, ' ', p);
+END

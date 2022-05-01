@@ -1,0 +1,15 @@
+PROGRAM circle;
+	(*Testing expression evaluation*)
+VAR
+	(*Variable declarations*)
+	r, p, a : REAL; 
+	i, j : INTEGER;
+BEGIN
+	r := 5.25;
+	p := 6.75 ;
+	i := 25;
+	j := i / r;
+			
+	(*Display the results*)
+	WRITELN  ('The output results are ' , (i / r), ', ', j);
+END

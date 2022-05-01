@@ -1,0 +1,18 @@
+PROGRAM circle;
+	(*Testing Mixed Types Operands for a Logic Expression*)
+VAR
+	(*Variable declarations*)
+	r, p, a : REAL; 
+	str : String;
+BEGIN
+	r := 8;
+	p := 4;
+	str := 'Hello';
+	IF ( str = 5) THEN
+	  	a := (3.14) + r * p
+	ELSE
+		a := p;
+		
+	(*Display the results*)
+	WRITELN  ('The output results are ' , r, ' ', p, ' ', a);
+END
