@@ -181,7 +181,7 @@ public:
             }
             else if (IsReal() && op.IsInt())
             {
-                return Value(false);
+                return Value(((int)Rtemp) == op.GetInt());
             }
         }
         return Value();
@@ -215,7 +215,6 @@ public:
         return Value();
     }
 
-    // divide this by op
     Value operator/(const Value &op) const
     {
         if (GetType() == op.GetType())
@@ -257,20 +256,16 @@ public:
             {
                 return Value(Rtemp > op.GetReal());
             }
-            else if (IsString() && op.IsString())
-            {
-                return Value(Stemp > op.GetString());
-            }
         }
         else
         {
             if (IsInt() && op.IsReal())
             {
-                return Value(false);
+                return Value(Itemp > op.GetReal());
             }
             else if (IsReal() && op.IsInt())
             {
-                return Value(false);
+                return Value(Rtemp > op.GetInt());
             }
         }
         return Value();
@@ -289,20 +284,16 @@ public:
             {
                 return Value(Rtemp < op.GetReal());
             }
-            else if (IsString() && op.IsString())
-            {
-                return Value(Stemp < op.GetString());
-            }
         }
         else
         {
             if (IsInt() && op.IsReal())
             {
-                return Value(false);
+                return Value(Itemp < op.GetReal());
             }
             else if (IsReal() && op.IsInt())
             {
-                return Value(false);
+                return Value(Rtemp < op.GetInt());
             }
         }
         return Value();
